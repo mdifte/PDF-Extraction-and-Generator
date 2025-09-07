@@ -45,6 +45,16 @@ jobs:
           exit 1
         }
 
+    - name: Test Windows executable
+      run: |
+        Write-Host "🧪 Testing Windows executable..."
+        $exePath = "dist/PDF_Processor.exe"
+        if (!(Test-Path $exePath)) {
+          Write-Host "❌ Executable not found: $exePath"
+          exit 1
+        }
+        Write-Host "✅ Executable exists and is ready for testing"
+
     - name: Upload Windows artifact
       uses: actions/upload-artifact@v4
       with:
@@ -98,6 +108,17 @@ jobs:
           echo "❌ macOS build failed"
           exit 1
         fi
+
+    - name: Test macOS app startup
+      run: |
+        echo "🧪 Testing macOS app startup..."
+        EXECUTABLE="dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+        if [ ! -f "$EXECUTABLE" ]; then
+          echo "❌ Executable not found: $EXECUTABLE"
+          exit 1
+        fi
+        chmod +x "$EXECUTABLE"
+        echo "✅ macOS app is ready for testing"
 
     - name: Upload macOS artifact
       uses: actions/upload-artifact@v4

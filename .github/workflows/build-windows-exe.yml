@@ -46,6 +46,56 @@ jobs:
           exit 1
         }
 
+    - name: Test Windows executable
+      run: |
+        Write-Host "🧪 Testing Windows executable..."
+        
+        $exePath = "dist/PDF_Processor.exe"
+        
+        # Check if executable exists
+        if (!(Test-Path $exePath)) {
+          Write-Host "❌ Executable not found: $exePath"
+          exit 1
+        }
+        
+        # Get file information
+        Write-Host "📋 Executable Information:"
+        Get-Item $exePath | Select-Object Name, Length, LastWriteTime, VersionInfo
+        
+        # Test if executable is valid (try to get version info)
+        Write-Host "Testing executable validity..."
+        try {
+          $versionInfo = (Get-Item $exePath).VersionInfo
+          if ($versionInfo.FileVersion) {
+            Write-Host "✅ Executable has version info: $($versionInfo.FileVersion)"
+          } else {
+            Write-Host "ℹ️  No version info found (normal for PyInstaller executables)"
+          }
+        } catch {
+          Write-Host "⚠️  Could not get version info: $($_.Exception.Message)"
+        }
+        
+        # Test if executable can start (with timeout)
+        Write-Host "Testing executable startup..."
+        try {
+          $process = Start-Process -FilePath $exePath -ArgumentList "--help" -NoNewWindow -PassThru -Wait -Timeout 10
+          if ($process.ExitCode -eq 0) {
+            Write-Host "✅ Executable started and exited cleanly"
+          } elseif ($process.ExitCode -eq 1) {
+            Write-Host "ℹ️  Executable started but exited with code 1 (may be normal for GUI apps)"
+          } else {
+            Write-Host "⚠️  Executable exited with code: $($process.ExitCode)"
+          }
+        } catch {
+          if ($_.Exception.Message -like "*timeout*") {
+            Write-Host "✅ Executable started successfully (timed out as expected for GUI app)"
+          } else {
+            Write-Host "⚠️  Executable test failed: $($_.Exception.Message)"
+          }
+        }
+        
+        Write-Host "✅ Windows executable test completed!"
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:

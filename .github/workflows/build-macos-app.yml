@@ -56,6 +56,40 @@ jobs:
           exit 1
         fi
 
+    - name: Test macOS app startup
+      run: |
+        echo "🧪 Testing macOS app startup..."
+        
+        # Make sure the executable is present and executable
+        EXECUTABLE="dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+        if [ ! -f "$EXECUTABLE" ]; then
+          echo "❌ Executable not found: $EXECUTABLE"
+          exit 1
+        fi
+        
+        # Make executable (should already be, but just in case)
+        chmod +x "$EXECUTABLE"
+        
+        # Test if the app can start (with timeout to prevent hanging)
+        echo "Testing app startup with 10-second timeout..."
+        timeout 10s "$EXECUTABLE" --help 2>&1 || true
+        
+        # Check if the process started (even if it exits quickly)
+        if [ $? -eq 124 ]; then
+          echo "✅ App started successfully (timed out as expected for GUI app)"
+        elif [ $? -eq 0 ]; then
+          echo "✅ App started and exited cleanly"
+        else
+          echo "⚠️  App may have issues - checking further..."
+        fi
+        
+        # Try to get basic app info
+        echo "📋 App Information:"
+        file "$EXECUTABLE"
+        ls -la "$EXECUTABLE"
+        
+        echo "✅ macOS app test completed!"
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:

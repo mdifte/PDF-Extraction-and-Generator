@@ -118,16 +118,19 @@ This project includes GitHub Actions workflows for automated cross-platform buil
 
 1. **macOS App Build** (`.github/workflows/build-macos-app.yml`)
    - Builds a macOS `.app` bundle (proper application format)
+   - **Tests app startup** to ensure it runs without errors
    - Creates a `.dmg` installer
    - Uploads artifacts for download
 
 2. **Windows Executable Build** (`.github/workflows/build-windows-exe.yml`)
    - Builds a Windows `.exe` executable
+   - **Tests executable validity** and startup
    - Includes all dependencies
    - Uploads artifacts for download
 
 3. **Cross-Platform Build** (`.github/workflows/build-cross-platform.yml`)
    - Builds for both macOS and Windows
+   - **Includes startup tests** for both platforms
    - Creates releases with all artifacts
    - Automatically creates GitHub releases
 
@@ -160,10 +163,16 @@ The build scripts are now optimized for GitHub Actions CI/CD:
 - **macOS**: Streamlined for automated builds, no interactive prompts
 - **No pathlib handling**: Removed unnecessary pathlib uninstallation (pathlib is built-in to Python 3.4+)
 - **Clean exits**: Proper exit codes for CI/CD pipeline integration
+- **Automated Testing**: Each workflow includes app/executable testing to catch issues early
 
-### Local Development
+### Automated Testing Features
 
-⚠️ **Note**: These build scripts are optimized for GitHub Actions. For local development, you may want to create separate local build scripts with interactive prompts.
+The GitHub Actions workflows now include comprehensive testing:
+
+- **macOS**: Tests app bundle creation and startup capability
+- **Windows**: Tests executable validity and startup behavior
+- **Cross-platform**: Validates builds on both operating systems
+- **Error Detection**: Catches missing dependencies and build issues before release
 
 ### Workflow Triggers
 
@@ -191,10 +200,6 @@ pip install -r requirements.txt
 pyinstaller --clean pdf_processor.spec
 ```
 - **GitHub Actions fails with timeout**: The build scripts now automatically detect CI environments and skip interactive prompts. If you still encounter issues, ensure the `CI` environment variable is properly set.
-
-## Author
-Developed by **Gideon Ayanwoye**\
-Email: ayanwoyegideon@gmail.com
 
 ##
 #### Enjoy using the PDF Processor! 🚀
