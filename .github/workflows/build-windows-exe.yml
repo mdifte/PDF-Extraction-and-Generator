@@ -34,8 +34,6 @@ jobs:
       run: |
         .\build_windows.bat
       shell: cmd
-      env:
-        CI: true  # Indicate we're running in CI environment
 
     - name: Verify build output
       run: |

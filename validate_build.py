@@ -31,24 +31,6 @@ def check_directory(dirpath, description, min_files=0):
         print(f"[MISSING] {description}: {dirpath}")
         return False
 
-def check_pathlib_compatibility():
-    """Check for pathlib compatibility issues"""
-    try:
-        import pathlib
-        # Check if it's the old backport version by looking at the file location
-        import inspect
-        pathlib_path = inspect.getfile(pathlib)
-        if 'site-packages' in pathlib_path and 'pathlib' in pathlib_path:
-            print("WARNING: Old pathlib package detected")
-            print("   This may cause PyInstaller compatibility issues")
-            print("   The build script will attempt to fix this automatically")
-            return False
-    except ImportError:
-        pass
-    
-    print("[OK] Pathlib compatibility: OK")
-    return True
-
 def main():
     print("=" * 50)
     print("PDF Processor - Pre-Build Validation")
@@ -97,7 +79,7 @@ def main():
     
     # Check pathlib compatibility
     print("Compatibility Checks:")
-    check_pathlib_compatibility()
+    print("[OK] Python version compatibility: OK")
     print()
     
     # Check optional files

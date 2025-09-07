@@ -42,8 +42,6 @@ jobs:
     - name: Build macOS app
       run: |
         ./build_macos.sh
-      env:
-        CI: true  # Indicate we're running in CI environment
 
     - name: Verify build output
       run: |

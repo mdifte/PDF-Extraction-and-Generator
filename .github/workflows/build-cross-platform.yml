@@ -34,8 +34,6 @@ jobs:
       run: |
         .\build_windows.bat
       shell: cmd
-      env:
-        CI: true
 
     - name: Verify Windows build
       run: |
@@ -88,8 +86,6 @@ jobs:
     - name: Build macOS app
       run: |
         ./build_macos.sh
-      env:
-        CI: true
 
     - name: Verify macOS build
       run: |

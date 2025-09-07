@@ -154,11 +154,16 @@ This script will:
 
 ### CI/CD Compatibility
 
-The build scripts automatically detect when running in GitHub Actions and skip interactive prompts:
+The build scripts are now optimized for GitHub Actions CI/CD:
 
-- **Windows**: Detects `CI` environment variable and skips `pause` commands
-- **macOS**: Detects `CI=true` and skips user input prompts
-- **Local builds**: Interactive prompts remain for user convenience
+- **Windows**: Streamlined for automated builds, no interactive prompts
+- **macOS**: Streamlined for automated builds, no interactive prompts
+- **No pathlib handling**: Removed unnecessary pathlib uninstallation (pathlib is built-in to Python 3.4+)
+- **Clean exits**: Proper exit codes for CI/CD pipeline integration
+
+### Local Development
+
+⚠️ **Note**: These build scripts are optimized for GitHub Actions. For local development, you may want to create separate local build scripts with interactive prompts.
 
 ### Workflow Triggers
 

@@ -1,7 +1,21 @@
 #!/bin/bash
 
 echo "========================================"
-echo "PDF Processor - macOS App Builder"
+echo "PDF P# Fix pathlib compatibility issue with PyInstaller
+echo "Checking for pathlib compatibility issues..."
+if pip3 show pathlib &> /dev/null; then
+    echo "Found incompatible pathlib package. Removing it..."
+    pip3 uninstall pathlib -y
+    if [ $? -ne 0 ]; then
+        echo "WARNING: Could not uninstall pathlib automatically"
+        echo "Please run: pip3 uninstall pathlib"
+        echo "Then re-run this build script"
+        exit 1
+    fi
+    print_status "pathlib compatibility issue resolved"
+else
+    print_status "No pathlib compatibility issues found"
+fiS App Builder"
 echo "========================================"
 echo
 
@@ -69,6 +83,14 @@ else
 fi
 
 print_status "Dependencies installed"
+
+# Clean previous builds
+echo "Cleaning previous builds..."
+rm -rf build/
+rm -rf dist/
+rm -f *.spec
+
+print_status "Cleaned previous builds"
 
 # Fix pathlib compatibility issue with PyInstaller
 echo "Checking for pathlib compatibility issues..."
@@ -148,31 +170,8 @@ echo "To install system-wide (optional):"
 echo "  cp -r 'dist/PDF Processor.app' /Applications/"
 echo
 
-# Check if running in CI environment
-if [ "$CI" = "true" ]; then
-    echo "Running in CI environment - skipping interactive prompts"
-    echo
-    print_status "Build completed successfully!"
-    # Make the script executable for future runs
-    chmod +x "$0"
-    exit 0
-fi
-
-# Ask if user wants to run the app
-read -p "Do you want to run the app now? (y/n): " choice
-case "$choice" in 
-    y|Y ) 
-        echo
-        echo "Starting PDF Processor..."
-        open "dist/PDF Processor.app" &
-        ;;
-    * ) 
-        echo "You can run it later by double-clicking: dist/PDF Processor.app"
-        ;;
-esac
-
 echo
-print_status "Build completed successfully!"
+print_status "Build completed successfully for GitHub Actions!"
 
 # Make the script executable for future runs
 chmod +x "$0"
