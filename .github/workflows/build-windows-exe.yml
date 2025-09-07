@@ -86,6 +86,6 @@ jobs:
         echo "" >> $env:GITHUB_STEP_SUMMARY
         echo "### 🚀 Usage:" >> $env:GITHUB_STEP_SUMMARY
         echo "Download the artifact and run:" >> $env:GITHUB_STEP_SUMMARY
-        echo "\`\`\`cmd" >> $env:GITHUB_STEP_SUMMARY
+        echo '```cmd' >> $env:GITHUB_STEP_SUMMARY
         echo "PDF_Processor.exe" >> $env:GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $env:GITHUB_STEP_SUMMARY
+        echo '```' >> $env:GITHUB_STEP_SUMMARY

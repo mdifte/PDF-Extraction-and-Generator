@@ -141,9 +141,17 @@ python3 -m PyInstaller \
     --hidden-import "reportlab.lib.utils" \
     --hidden-import "fitz" \
     --hidden-import "PyPDF2" \
+    --hidden-import "docx" \
+    --hidden-import "lxml" \
+    --hidden-import "lxml.etree" \
+    --hidden-import "lxml.html" \
+    --hidden-import "lxml._elementpath" \
+    --hidden-import "lxml.cssselect" \
     --hidden-import "concurrent.futures" \
     --collect-all "reportlab" \
     --collect-all "fitz" \
+    --collect-all "docx" \
+    --collect-all "lxml" \
     pdf_processor.py
 
 if [ $? -ne 0 ]; then
