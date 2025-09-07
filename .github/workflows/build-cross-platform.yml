@@ -1,0 +1,202 @@
+name: Build Cross-Platform Executables
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        if (Test-Path requirements.txt) { pip install -r requirements.txt }
+
+    - name: Validate build requirements
+      run: |
+        python validate_build.py
+
+    - name: Build Windows executable
+      run: |
+        .\build_windows.bat
+      shell: cmd
+      env:
+        CI: true
+
+    - name: Verify Windows build
+      run: |
+        if (Test-Path "dist/PDF_Processor.exe") {
+          Write-Host "✅ Windows build successful!"
+          Get-Item dist/PDF_Processor.exe | Select-Object Name, Length, LastWriteTime
+        } else {
+          Write-Host "❌ Windows build failed"
+          exit 1
+        }
+
+    - name: Upload Windows artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: PDF-Processor-Windows
+        path: dist/PDF_Processor.exe
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        brew update
+        brew install python-tk
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Validate build requirements
+      run: |
+        python validate_build.py
+
+    - name: Make build script executable
+      run: |
+        chmod +x build_macos.sh
+
+    - name: Build macOS app
+      run: |
+        ./build_macos.sh
+      env:
+        CI: true
+
+    - name: Verify macOS build
+      run: |
+        if [ -f "dist/PDF_Processor" ]; then
+          echo "✅ macOS build successful!"
+          file dist/PDF_Processor
+          du -h dist/PDF_Processor
+        else
+          echo "❌ macOS build failed"
+          exit 1
+        fi
+
+    - name: Upload macOS artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: PDF-Processor-macOS
+        path: dist/PDF_Processor
+        retention-days: 30
+
+  create-release:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: PDF-Processor-Windows
+        path: artifacts/windows/
+
+    - name: Download macOS artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: PDF-Processor-macOS
+        path: artifacts/macos/
+
+    - name: Create release archives
+      run: |
+        cd artifacts
+        # Create Windows archive
+        zip -r PDF_Processor_Windows.zip windows/
+        # Create macOS archive
+        tar -czf PDF_Processor_macOS.tar.gz -C macos .
+        # Create combined archive
+        zip -r PDF_Processor_All_Platforms.zip windows/ macos/
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: PDF Processor v${{ github.run_number }}
+        body: |
+          ## 🚀 Automated Release
+
+          This release contains the latest PDF Processor executables for Windows and macOS.
+
+          ### 📦 Downloads:
+          - **Windows**: `PDF_Processor_Windows.zip` - Standalone .exe file
+          - **macOS**: `PDF_Processor_macOS.tar.gz` - Native macOS app
+          - **All Platforms**: `PDF_Processor_All_Platforms.zip` - Combined archive
+
+          ### ✨ Features:
+          - Batch PDF processing with modern GUI
+          - Automatic text replacement with formatting preservation
+          - JSON-based dynamic PDF generation
+          - Cross-platform compatibility
+
+          ### 🛠️ Installation:
+          - **Windows**: Extract and run `PDF_Processor.exe`
+          - **macOS**: Extract and run `PDF_Processor`
+
+          No Python installation required!
+        draft: false
+        prerelease: false
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/PDF_Processor_Windows.zip
+        asset_name: PDF_Processor_Windows.zip
+        asset_content_type: application/zip
+
+    - name: Upload macOS release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/PDF_Processor_macOS.tar.gz
+        asset_name: PDF_Processor_macOS.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload combined release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/PDF_Processor_All_Platforms.zip
+        asset_name: PDF_Processor_All_Platforms.zip
+        asset_content_type: application/zip

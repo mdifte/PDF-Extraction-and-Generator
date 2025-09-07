@@ -1,0 +1,105 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        brew update
+        brew install python-tk
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Validate build requirements
+      run: |
+        python validate_build.py
+
+    - name: Make build script executable
+      run: |
+        chmod +x build_macos.sh
+
+    - name: Build macOS app
+      run: |
+        ./build_macos.sh
+      env:
+        CI: true  # Indicate we're running in CI environment
+
+    - name: Verify build output
+      run: |
+        ls -la dist/
+        if [ -f "dist/PDF_Processor" ]; then
+          echo "✅ Build successful!"
+          file dist/PDF_Processor
+          du -h dist/PDF_Processor
+        else
+          echo "❌ Build failed - executable not found"
+          exit 1
+        fi
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: PDF-Processor-macOS
+        path: |
+          dist/PDF_Processor
+          build_macos.sh
+          BUILD_README.md
+        retention-days: 30
+
+    - name: Create release archive
+      run: |
+        cd dist
+        tar -czf PDF_Processor_macOS.tar.gz PDF_Processor
+        cd ..
+
+    - name: Upload release archive
+      uses: actions/upload-artifact@v4
+      with:
+        name: PDF-Processor-macOS-Archive
+        path: dist/PDF_Processor_macOS.tar.gz
+        retention-days: 30
+
+    - name: Generate build summary
+      run: |
+        echo "## 📦 Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Platform:** macOS $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
+        echo "**Python:** $(python --version)" >> $GITHUB_STEP_SUMMARY
+        echo "**PyInstaller:** $(pyinstaller --version)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Build Status:** ✅ Successful" >> $GITHUB_STEP_SUMMARY
+        echo "**Output File:** dist/PDF_Processor" >> $GITHUB_STEP_SUMMARY
+        echo "**File Size:** $(du -h dist/PDF_Processor | cut -f1)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📁 Included Assets:" >> $GITHUB_STEP_SUMMARY
+        echo "- Fonts: $(ls -1 fonts/ | wc -l) files" >> $GITHUB_STEP_SUMMARY
+        echo "- Images: $(ls -1 images/ | wc -l) files" >> $GITHUB_STEP_SUMMARY
+        echo "- Documents: $(ls -1 docs/ | wc -l) files" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🚀 Usage:" >> $GITHUB_STEP_SUMMARY
+        echo "Download the artifact and run:" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+        echo "chmod +x PDF_Processor" >> $GITHUB_STEP_SUMMARY
+        echo "./PDF_Processor" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
