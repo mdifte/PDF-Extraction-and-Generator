@@ -49,13 +49,19 @@ pip install pyinstaller
 ### 2. Create the macOS App
 Run the following command in the terminal:
 ```bash
-pyinstaller --onefile --windowed --name "PDF Processor" --icon=icon.icns pdf_processor.py
+./build_macos.sh
 ```
+
+**What you'll get:**
+- `dist/PDF Processor.app` - A proper macOS application bundle (not just a single file)
+- This is a complete macOS app that users can double-click to run
+- Includes all fonts, images, and documents bundled inside
+
 **Explanation of Flags:**
-- `--onefile` : Packages everything into a single executable.
-- `--windowed` : Hides the terminal window when running the app.
-- `--name "PDF Processor"` : Sets the application name.
-- `--icon=icon.icns` : (Optional) Use a custom app icon. Place the `.icns` file in the project directory.
+- `--onedir` : Creates a directory bundle (macOS .app format) instead of a single file
+- `--windowed` : Hides the terminal window when running the app
+- `--name "PDF Processor"` : Sets the application name with spaces (macOS style)
+- `--icon=icon.icns` : (Optional) Use a custom app icon. Place the `.icns` file in the project directory
 
 ### 3. Edit the .spec File
 After running PyInstaller for the first time, it generates a `.spec` file.\
@@ -92,13 +98,16 @@ After running the command, the compiled app will be located inside the `dist/` d
 
 To run the app:
 ```bash
-open dist/PDF\ Processor.app
+# For macOS .app bundle:
+open "dist/PDF Processor.app"
+
+# Or simply double-click the PDF Processor.app file in Finder
 ```
 
 ## 5. Create a .dmg Installer (Optional)
 To distribute the app, you may want to package it into a `.dmg` file:
 ```bash
-hdiutil create -volname "PDF Processor" -srcfolder dist/PDF\ Processor.app -ov -format UDZO PDF_Processor.dmg
+hdiutil create -volname "PDF Processor" -srcfolder "dist/PDF Processor.app" -ov -format UDZO PDF_Processor.dmg
 ```
 
 ## Automated Builds with GitHub Actions
@@ -108,7 +117,7 @@ This project includes GitHub Actions workflows for automated cross-platform buil
 ### Available Workflows
 
 1. **macOS App Build** (`.github/workflows/build-macos-app.yml`)
-   - Builds a macOS `.app` bundle
+   - Builds a macOS `.app` bundle (proper application format)
    - Creates a `.dmg` installer
    - Uploads artifacts for download
 
@@ -143,6 +152,14 @@ This script will:
 - Check GitHub Actions files
 - Simulate the build process
 
+### CI/CD Compatibility
+
+The build scripts automatically detect when running in GitHub Actions and skip interactive prompts:
+
+- **Windows**: Detects `CI` environment variable and skips `pause` commands
+- **macOS**: Detects `CI=true` and skips user input prompts
+- **Local builds**: Interactive prompts remain for user convenience
+
 ### Workflow Triggers
 
 - **Manual**: Click "Run workflow" in the Actions tab
@@ -168,6 +185,7 @@ pip install -r requirements.txt
 ```bash
 pyinstaller --clean pdf_processor.spec
 ```
+- **GitHub Actions fails with timeout**: The build scripts now automatically detect CI environments and skip interactive prompts. If you still encounter issues, ensure the `CI` environment variable is properly set.
 
 ## Author
 Developed by **Gideon Ayanwoye**\

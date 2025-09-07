@@ -93,10 +93,11 @@ jobs:
 
     - name: Verify macOS build
       run: |
-        if [ -f "dist/PDF_Processor" ]; then
+        if [ -d "dist/PDF Processor.app" ]; then
           echo "✅ macOS build successful!"
-          file dist/PDF_Processor
-          du -h dist/PDF_Processor
+          du -sh "dist/PDF Processor.app"
+          echo "Contents:"
+          ls -la "dist/PDF Processor.app/Contents/MacOS/"
         else
           echo "❌ macOS build failed"
           exit 1
@@ -106,7 +107,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: PDF-Processor-macOS
-        path: dist/PDF_Processor
+        path: dist/PDF Processor.app/
         retention-days: 30
 
   create-release:
@@ -154,7 +155,7 @@ jobs:
 
           ### 📦 Downloads:
           - **Windows**: `PDF_Processor_Windows.zip` - Standalone .exe file
-          - **macOS**: `PDF_Processor_macOS.tar.gz` - Native macOS app
+          - **macOS**: `PDF_Processor_macOS.tar.gz` - Native macOS .app bundle
           - **All Platforms**: `PDF_Processor_All_Platforms.zip` - Combined archive
 
           ### ✨ Features:
@@ -165,7 +166,7 @@ jobs:
 
           ### 🛠️ Installation:
           - **Windows**: Extract and run `PDF_Processor.exe`
-          - **macOS**: Extract and run `PDF_Processor`
+          - **macOS**: Extract and double-click `PDF Processor.app`
 
           No Python installation required!
         draft: false

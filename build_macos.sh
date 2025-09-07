@@ -101,9 +101,9 @@ echo "This may take several minutes..."
 echo
 
 python3 -m PyInstaller \
-    --onefile \
+    --onedir \
     --windowed \
-    --name "PDF_Processor" \
+    --name "PDF Processor" \
     --icon "document_generator_icon.icns" \
     --add-data "fonts:fonts" \
     --add-data "images:images" \
@@ -136,17 +136,27 @@ echo "========================================"
 print_status "BUILD SUCCESSFUL!"
 echo "========================================"
 echo
-echo "Your app is ready:"
-echo "Location: dist/PDF_Processor"
+echo "Your macOS app bundle is ready:"
+echo "Location: dist/PDF Processor.app"
 echo
 echo "You can now:"
-echo "1. Run the app directly: ./dist/PDF_Processor"
+echo "1. Run the app by double-clicking: dist/PDF Processor.app"
 echo "2. Copy the app to /Applications/ for system-wide access"
 echo "3. Create an alias on your desktop"
 echo
 echo "To install system-wide (optional):"
-echo "  sudo cp dist/PDF_Processor /Applications/"
+echo "  cp -r 'dist/PDF Processor.app' /Applications/"
 echo
+
+# Check if running in CI environment
+if [ "$CI" = "true" ]; then
+    echo "Running in CI environment - skipping interactive prompts"
+    echo
+    print_status "Build completed successfully!"
+    # Make the script executable for future runs
+    chmod +x "$0"
+    exit 0
+fi
 
 # Ask if user wants to run the app
 read -p "Do you want to run the app now? (y/n): " choice
@@ -154,10 +164,10 @@ case "$choice" in
     y|Y ) 
         echo
         echo "Starting PDF Processor..."
-        ./dist/PDF_Processor &
+        open "dist/PDF Processor.app" &
         ;;
     * ) 
-        echo "You can run it later with: ./dist/PDF_Processor"
+        echo "You can run it later by double-clicking: dist/PDF Processor.app"
         ;;
 esac
 

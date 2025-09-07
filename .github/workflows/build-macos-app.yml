@@ -48,21 +48,22 @@ jobs:
     - name: Verify build output
       run: |
         ls -la dist/
-        if [ -f "dist/PDF_Processor" ]; then
-          echo "✅ Build successful!"
-          file dist/PDF_Processor
-          du -h dist/PDF_Processor
+        if [ -d "dist/PDF Processor.app" ]; then
+          echo "✅ macOS app bundle created successfully!"
+          du -sh "dist/PDF Processor.app"
+          echo "Contents:"
+          ls -la "dist/PDF Processor.app/Contents/MacOS/"
         else
-          echo "❌ Build failed - executable not found"
+          echo "❌ macOS app bundle not found"
           exit 1
         fi
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: PDF-Processor-macOS
+        name: PDF-Processor-macOS-App
         path: |
-          dist/PDF_Processor
+          dist/PDF Processor.app/
           build_macos.sh
           BUILD_README.md
         retention-days: 30
@@ -70,7 +71,7 @@ jobs:
     - name: Create release archive
       run: |
         cd dist
-        tar -czf PDF_Processor_macOS.tar.gz PDF_Processor
+        tar -czf PDF_Processor_macOS.tar.gz "PDF Processor.app"
         cd ..
 
     - name: Upload release archive
@@ -89,8 +90,8 @@ jobs:
         echo "**PyInstaller:** $(pyinstaller --version)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Build Status:** ✅ Successful" >> $GITHUB_STEP_SUMMARY
-        echo "**Output File:** dist/PDF_Processor" >> $GITHUB_STEP_SUMMARY
-        echo "**File Size:** $(du -h dist/PDF_Processor | cut -f1)" >> $GITHUB_STEP_SUMMARY
+        echo "**Output File:** dist/PDF Processor.app" >> $GITHUB_STEP_SUMMARY
+        echo "**File Size:** $(du -sh 'dist/PDF Processor.app' | cut -f1)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📁 Included Assets:" >> $GITHUB_STEP_SUMMARY
         echo "- Fonts: $(ls -1 fonts/ | wc -l) files" >> $GITHUB_STEP_SUMMARY
@@ -98,8 +99,6 @@ jobs:
         echo "- Documents: $(ls -1 docs/ | wc -l) files" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🚀 Usage:" >> $GITHUB_STEP_SUMMARY
-        echo "Download the artifact and run:" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-        echo "chmod +x PDF_Processor" >> $GITHUB_STEP_SUMMARY
-        echo "./PDF_Processor" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "Download the artifact and:" >> $GITHUB_STEP_SUMMARY
+        echo "- Double-click PDF Processor.app to run" >> $GITHUB_STEP_SUMMARY
+        echo "- Or move to /Applications/ for system-wide access" >> $GITHUB_STEP_SUMMARY

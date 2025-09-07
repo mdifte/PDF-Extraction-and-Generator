@@ -1,6 +1,9 @@
 @echo off
-echo ========================================
-echo PDF Processor - Windows Executable Builder
+echo =====================================        echo ERROR: Could not uninstall pathlib automatically
+        echo Please run: pip uninstall pathlib
+        echo Then re-run this build script
+        if not defined CI pause
+        exit /b 1echo PDF Processor - Windows Executable Builder
 echo ========================================
 echo.
 
@@ -9,7 +12,7 @@ python --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python is not installed or not in PATH
     echo Please install Python from https://python.org
-    pause
+    if not defined CI pause
     exit /b 1
 )
 
@@ -23,7 +26,7 @@ if errorlevel 1 (
     pip install pyinstaller
     if errorlevel 1 (
         echo ERROR: Failed to install PyInstaller
-        pause
+        if not defined CI pause
         exit /b 1
     )
 )
@@ -37,7 +40,7 @@ pip install -r requirements.txt
 if errorlevel 1 (
     echo ERROR: Failed to install required packages
     echo Make sure requirements.txt exists and is valid
-    pause
+    if not defined CI pause
     exit /b 1
 )
 
@@ -105,7 +108,7 @@ if errorlevel 1 (
     echo.
     echo ❌ BUILD FAILED!
     echo Check the error messages above for details.
-    pause
+    if not defined CI pause
     exit /b 1
 )
 
@@ -125,13 +128,13 @@ echo.
 echo Note: The first run may be slower as Windows scans the new executable.
 echo.
 
-REM Ask if user wants to run the executable
-set /p choice="Do you want to run the executable now? (y/n): "
-if /i "%choice%"=="y" (
-    echo.
-    echo Starting PDF Processor...
-    start "" "dist\PDF_Processor.exe"
+REM Check if running in CI environment
+if defined CI (
+    echo Running in CI environment - skipping interactive prompts
+    echo Build completed successfully!
+    exit /b 0
 )
+
 
 echo.
 echo Build completed successfully!
