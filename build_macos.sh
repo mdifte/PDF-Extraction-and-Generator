@@ -152,6 +152,8 @@ python3 -m PyInstaller \
     --collect-all "fitz" \
     --collect-all "docx" \
     --collect-all "lxml" \
+    --osx-bundle-identifier "com.pdfprocessor.app" \
+    --osx-entitlements-file "Info.plist" \
     pdf_processor.py
 
 if [ $? -ne 0 ]; then
@@ -169,10 +171,32 @@ echo
 echo "Your macOS app bundle is ready:"
 echo "Location: dist/PDF Processor.app"
 echo
+
+# Set proper permissions for the executable
+echo "Setting executable permissions..."
+chmod 755 "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+if [ $? -eq 0 ]; then
+    print_status "Executable permissions set to 755"
+else
+    print_error "Failed to set executable permissions"
+fi
+
+# Create distribution archive with ditto to preserve permissions
+echo "Creating distribution archive with ditto..."
+ditto -c -k --sequesterRsrc --keepParent "dist/PDF Processor.app" "PDF-Processor-macOS-App.zip"
+if [ $? -eq 0 ]; then
+    print_status "Distribution archive created: PDF-Processor-macOS-App.zip"
+    echo "Archive size: $(du -sh 'PDF-Processor-macOS-App.zip' | cut -f1)"
+else
+    print_error "Failed to create distribution archive"
+fi
+
+echo
 echo "You can now:"
 echo "1. Run the app by double-clicking: dist/PDF Processor.app"
 echo "2. Copy the app to /Applications/ for system-wide access"
 echo "3. Create an alias on your desktop"
+echo "4. Distribute the zip file: PDF-Processor-macOS-App.zip"
 echo
 echo "To install system-wide (optional):"
 echo "  cp -r 'dist/PDF Processor.app' /Applications/"

@@ -580,3 +580,30 @@ fileName='c:\\Users\\ifte\\Downloads\\Source Code\\3\\images\\Picture1.jpg' iden
 2025-09-07 10:22:53,566 - INFO - Progress updated to 100.00%
 2025-09-07 10:22:53,587 - INFO - All files processed successfully
 2025-09-07 10:33:50,475 - INFO - Application exited
+2025-09-07 15:13:06,457 - INFO - Application started
+2025-09-07 15:13:06,896 - INFO - Application initialized
+2025-09-07 15:13:07,545 - INFO - UI setup complete!
+2025-09-07 15:13:11,815 - INFO - Files selected: ('C:/Users/ifte/Downloads/Input.pdf',)
+2025-09-07 15:13:17,096 - INFO - Output directory selected: C:/Users/ifte/Downloads
+2025-09-07 15:13:18,063 - INFO - BatchProcessor initialized with max_workers=5
+2025-09-07 15:13:18,063 - INFO - Starting to process 1 files
+2025-09-07 15:13:18,064 - INFO - Submitting file for processing: C:/Users/ifte/Downloads/Input.pdf
+2025-09-07 15:13:18,064 - INFO - Processing single file: C:/Users/ifte/Downloads/Input.pdf
+2025-09-07 15:13:22,643 - INFO - Generated output for file C:/Users/ifte/Downloads/Input.pdf: 
+2025-09-07 15:13:22,652 - INFO - Successfully processed file: C:/Users/ifte/Downloads/Input.pdf
+2025-09-07 15:13:22,658 - INFO - Progress updated to 100.00%
+2025-09-07 15:13:22,686 - INFO - All files processed successfully
+2025-09-07 15:15:36,603 - INFO - Application exited
+2025-09-07 15:15:38,895 - INFO - Application started
+2025-09-07 15:15:38,964 - INFO - Application initialized
+2025-09-07 15:15:39,460 - INFO - UI setup complete!
+2025-09-07 15:15:43,393 - INFO - Files selected: ('C:/Users/ifte/Downloads/Input.pdf',)
+2025-09-07 15:15:46,252 - INFO - Output directory selected: C:/Users/ifte/Downloads
+2025-09-07 15:15:46,692 - INFO - BatchProcessor initialized with max_workers=5
+2025-09-07 15:15:46,692 - INFO - Starting to process 1 files
+2025-09-07 15:15:46,693 - INFO - Submitting file for processing: C:/Users/ifte/Downloads/Input.pdf
+2025-09-07 15:15:46,693 - INFO - Processing single file: C:/Users/ifte/Downloads/Input.pdf
+2025-09-07 15:15:51,116 - INFO - Generated output for file C:/Users/ifte/Downloads/Input.pdf: 
+2025-09-07 15:15:51,125 - INFO - Successfully processed file: C:/Users/ifte/Downloads/Input.pdf
+2025-09-07 15:15:51,127 - INFO - Progress updated to 100.00%
+2025-09-07 15:15:51,150 - INFO - All files processed successfully

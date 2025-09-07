@@ -87,10 +87,10 @@ class DocumentGenerator:
 
 
         
+        
         {data.recipient_name}
         {data.street_address}
         {data.city_and_state} {data.zip_code}
-
 
 
 

@@ -148,11 +148,25 @@ jobs:
         rm -f /tmp/app_output.log
         echo "✅ macOS app is ready for testing"
 
+    - name: Set macOS executable permissions
+      run: |
+        echo "🔧 Setting executable permissions..."
+        chmod 755 "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+        ls -la "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+
+    - name: Create macOS distribution archive
+      run: |
+        echo "📦 Creating macOS distribution archive with ditto..."
+        ditto -c -k --sequesterRsrc --keepParent "dist/PDF Processor.app" "PDF-Processor-macOS-App.zip"
+        ls -la PDF-Processor-macOS-App.zip
+
     - name: Upload macOS artifact
       uses: actions/upload-artifact@v4
       with:
         name: PDF-Processor-macOS
-        path: dist/PDF Processor.app/
+        path: |
+          dist/PDF Processor.app/
+          PDF-Processor-macOS-App.zip
         retention-days: 30
 
   create-release:
@@ -181,8 +195,10 @@ jobs:
         cd artifacts
         # Create Windows archive
         zip -r PDF_Processor_Windows.zip windows/
-        # Create macOS archive
-        tar -czf PDF_Processor_macOS.tar.gz -C macos .
+        # Create macOS archive with ditto to preserve permissions
+        cd macos
+        ditto -c -k --sequesterRsrc --keepParent "PDF Processor.app" "../PDF_Processor_macOS.zip"
+        cd ..
         # Create combined archive
         zip -r PDF_Processor_All_Platforms.zip windows/ macos/
 

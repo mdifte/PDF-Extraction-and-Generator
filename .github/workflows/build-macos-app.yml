@@ -110,12 +110,94 @@ jobs:
         
         echo "✅ macOS app test completed!"
 
+    - name: Set executable permissions
+      run: |
+        echo "🔧 Setting executable permissions..."
+        chmod 755 "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+        ls -la "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+
+    - name: Create distribution archive
+      run: |
+        echo "📦 Creating distribution archive with ditto..."
+        cd dist
+        ditto -c -k --sequesterRsrc --keepParent "PDF Processor.app" "../PDF-Processor-macOS-App.zip"
+        cd ..
+        ls -la PDF-Processor-macOS-App.zip
+
+    - name: Code sign application (optional)
+      run: |
+        echo "🔐 Code signing application..."
+        # Note: Replace with your actual Developer ID and Team ID
+        # You need to set up the following secrets in your repository:
+        # - DEVELOPER_ID_APPLICATION
+        # - DEVELOPER_TEAM_ID
+        # - AC_NOTARY_PROFILE (for notarytool)
+        
+        if [ -n "${{ secrets.DEVELOPER_ID_APPLICATION }}" ]; then
+          echo "Signing with Developer ID..."
+          codesign --force --deep --options runtime --sign "${{ secrets.DEVELOPER_ID_APPLICATION }}" "dist/PDF Processor.app"
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ Code signing successful"
+          else
+            echo "⚠️  Code signing failed - continuing without signing"
+          fi
+        else
+          echo "⚠️  Developer ID not configured - skipping code signing"
+        fi
+
+    - name: Notarize application (optional)
+      run: |
+        echo "📋 Notarizing application..."
+        # Requires AC_NOTARY_PROFILE secret to be configured
+        
+        if [ -n "${{ secrets.AC_NOTARY_PROFILE }}" ]; then
+          echo "Submitting for notarization..."
+          xcrun notarytool submit "dist/PDF Processor.app" --keychain-profile "${{ secrets.AC_NOTARY_PROFILE }}" --wait
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ Notarization submitted successfully"
+            echo "Stapling notarization ticket..."
+            xcrun stapler staple "dist/PDF Processor.app"
+            
+            if [ $? -eq 0 ]; then
+              echo "✅ Notarization stapled successfully"
+            else
+              echo "⚠️  Stapling failed"
+            fi
+          else
+            echo "⚠️  Notarization failed - continuing without notarization"
+          fi
+        else
+          echo "⚠️  Notary profile not configured - skipping notarization"
+        fi
+
+    - name: Verify app bundle structure
+      run: |
+        echo "🔍 Verifying app bundle structure..."
+        echo "Info.plist contents:"
+        if [ -f "dist/PDF Processor.app/Contents/Info.plist" ]; then
+          plutil -p "dist/PDF Processor.app/Contents/Info.plist" | head -20
+        else
+          echo "⚠️  Info.plist not found in app bundle"
+        fi
+        
+        echo "CFBundleExecutable check:"
+        plutil -extract CFBundleExecutable raw "dist/PDF Processor.app/Contents/Info.plist" 2>/dev/null || echo "Not found"
+        
+        echo "CFBundlePackageType check:"
+        plutil -extract CFBundlePackageType raw "dist/PDF Processor.app/Contents/Info.plist" 2>/dev/null || echo "Not found"
+        
+        echo "CFBundleIdentifier check:"
+        plutil -extract CFBundleIdentifier raw "dist/PDF Processor.app/Contents/Info.plist" 2>/dev/null || echo "Not found"
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: PDF-Processor-macOS-App
         path: |
           dist/PDF Processor.app/
+          PDF-Processor-macOS-App.zip
           build_macos.sh
           BUILD_README.md
         retention-days: 30
@@ -152,5 +234,17 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🚀 Usage:" >> $GITHUB_STEP_SUMMARY
         echo "Download the artifact and:" >> $GITHUB_STEP_SUMMARY
+        echo "- Double-click PDF-Processor-macOS-App.zip to extract" >> $GITHUB_STEP_SUMMARY
         echo "- Double-click PDF Processor.app to run" >> $GITHUB_STEP_SUMMARY
-        echo "- Or move to /Applications/ for system-wide access" >> $GITHUB_STEP_SUMMARY
+        echo "- Move to /Applications/ for system-wide access" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔐 Security Features:" >> $GITHUB_STEP_SUMMARY
+        echo "- Executable permissions: 0755" >> $GITHUB_STEP_SUMMARY
+        echo "- Distribution archive with preserved permissions" >> $GITHUB_STEP_SUMMARY
+        echo "- Code signing (if configured)" >> $GITHUB_STEP_SUMMARY
+        echo "- Notarization (if configured)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 App Bundle Info:" >> $GITHUB_STEP_SUMMARY
+        echo "- CFBundleExecutable: PDF Processor" >> $GITHUB_STEP_SUMMARY
+        echo "- CFBundlePackageType: APPL" >> $GITHUB_STEP_SUMMARY
+        echo "- CFBundleIdentifier: com.pdfprocessor.app" >> $GITHUB_STEP_SUMMARY
