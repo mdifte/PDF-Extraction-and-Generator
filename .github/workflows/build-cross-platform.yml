@@ -118,6 +118,34 @@ jobs:
           exit 1
         fi
         chmod +x "$EXECUTABLE"
+        
+        # macOS-compatible timeout using background process
+        "$EXECUTABLE" --help > /tmp/app_output.log 2>&1 &
+        APP_PID=$!
+        
+        # Wait up to 10 seconds
+        SECONDS_WAITED=0
+        while kill -0 $APP_PID 2>/dev/null && [ $SECONDS_WAITED -lt 10 ]; do
+          sleep 1
+          SECONDS_WAITED=$((SECONDS_WAITED + 1))
+        done
+        
+        # Check result
+        if kill -0 $APP_PID 2>/dev/null; then
+          echo "✅ App started successfully (still running after $SECONDS_WAITED seconds)"
+          kill $APP_PID 2>/dev/null || true
+        else
+          wait $APP_PID 2>/dev/null
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ App started and exited cleanly"
+          else
+            echo "⚠️  App exited with code: $EXIT_CODE"
+          fi
+        fi
+        
+        # Clean up
+        rm -f /tmp/app_output.log
         echo "✅ macOS app is ready for testing"
 
     - name: Upload macOS artifact

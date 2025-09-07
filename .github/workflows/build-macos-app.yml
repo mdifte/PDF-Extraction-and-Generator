@@ -72,16 +72,36 @@ jobs:
         
         # Test if the app can start (with timeout to prevent hanging)
         echo "Testing app startup with 10-second timeout..."
-        timeout 10s "$EXECUTABLE" --help 2>&1 || true
         
-        # Check if the process started (even if it exits quickly)
-        if [ $? -eq 124 ]; then
-          echo "✅ App started successfully (timed out as expected for GUI app)"
-        elif [ $? -eq 0 ]; then
-          echo "✅ App started and exited cleanly"
+        # macOS-compatible timeout using background process
+        "$EXECUTABLE" --help > /tmp/app_output.log 2>&1 &
+        APP_PID=$!
+        
+        # Wait up to 10 seconds for the process
+        SECONDS_WAITED=0
+        while kill -0 $APP_PID 2>/dev/null && [ $SECONDS_WAITED -lt 10 ]; do
+          sleep 1
+          SECONDS_WAITED=$((SECONDS_WAITED + 1))
+        done
+        
+        # Check if process is still running or exited
+        if kill -0 $APP_PID 2>/dev/null; then
+          echo "✅ App started successfully (still running after $SECONDS_WAITED seconds)"
+          kill $APP_PID 2>/dev/null || true
         else
-          echo "⚠️  App may have issues - checking further..."
+          wait $APP_PID 2>/dev/null
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ App started and exited cleanly"
+          else
+            echo "⚠️  App exited with code: $EXIT_CODE"
+            echo "Output:"
+            cat /tmp/app_output.log 2>/dev/null || echo "No output captured"
+          fi
         fi
+        
+        # Clean up
+        rm -f /tmp/app_output.log
         
         # Try to get basic app info
         echo "📋 App Information:"
