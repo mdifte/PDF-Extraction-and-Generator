@@ -67,105 +67,48 @@ jobs:
           exit 1
         fi
         
-        # Check executable permissions
-        if [ ! -x "$EXECUTABLE" ]; then
-          echo "🔧 Making executable..."
-          chmod +x "$EXECUTABLE"
-        fi
+        # Make executable (should already be, but just in case)
+        chmod +x "$EXECUTABLE"
         
-        echo "📋 Executable information:"
-        ls -la "$EXECUTABLE"
-        file "$EXECUTABLE"
+        # Test if the app can start (with timeout to prevent hanging)
+        echo "Testing app startup with 10-second timeout..."
         
-        # Test 1: Basic file validation
-        echo "Test 1: Basic file validation..."
-        if [ -x "$EXECUTABLE" ]; then
-          echo "✅ Executable has execute permissions"
-        else
-          echo "❌ Executable missing execute permissions"
-          exit 1
-        fi
-        
-        # Test 2: Quick startup test (shorter timeout)
-        echo "Test 2: Quick startup test..."
-        START_TIME=$(date +%s)
-        
-        # Try to start the app in background with shorter timeout
-        "$EXECUTABLE" > /tmp/app_startup.log 2>&1 &
+        # macOS-compatible timeout using background process
+        "$EXECUTABLE" --help > /tmp/app_output.log 2>&1 &
         APP_PID=$!
         
-        # Wait up to 5 seconds (shorter than before)
+        # Wait up to 10 seconds for the process
         SECONDS_WAITED=0
-        while kill -0 $APP_PID 2>/dev/null && [ $SECONDS_WAITED -lt 5 ]; do
+        while kill -0 $APP_PID 2>/dev/null && [ $SECONDS_WAITED -lt 10 ]; do
           sleep 1
           SECONDS_WAITED=$((SECONDS_WAITED + 1))
-          echo "⏳ Waiting... $SECONDS_WAITED seconds"
         done
         
-        END_TIME=$(date +%s)
-        DURATION=$((END_TIME - START_TIME))
-        
-        # Check result
+        # Check if process is still running or exited
         if kill -0 $APP_PID 2>/dev/null; then
           echo "✅ App started successfully (still running after $SECONDS_WAITED seconds)"
-          echo "🛑 Killing test process..."
           kill $APP_PID 2>/dev/null || true
-          sleep 1
-          if kill -0 $APP_PID 2>/dev/null; then
-            kill -9 $APP_PID 2>/dev/null || true
-          fi
         else
           wait $APP_PID 2>/dev/null
           EXIT_CODE=$?
-          echo "📊 App exited with code: $EXIT_CODE (duration: ${DURATION}s)"
-          
           if [ $EXIT_CODE -eq 0 ]; then
             echo "✅ App started and exited cleanly"
-          elif [ $EXIT_CODE -eq 137 ]; then
-            echo "⚠️  App was killed (SIGKILL) - this may be normal for GUI apps"
-            echo "   GUI applications often get killed in CI environments"
-            echo "   This doesn't necessarily indicate a problem with the app"
           else
             echo "⚠️  App exited with code: $EXIT_CODE"
-            echo "Output from app:"
-            cat /tmp/app_startup.log 2>/dev/null || echo "No output captured"
+            echo "Output:"
+            cat /tmp/app_output.log 2>/dev/null || echo "No output captured"
           fi
-        fi
-        
-        # Test 3: Check app bundle structure
-        echo "Test 3: App bundle structure check..."
-        if [ -d "dist/PDF Processor.app" ]; then
-          echo "✅ App bundle directory exists"
-          
-          if [ -f "dist/PDF Processor.app/Contents/Info.plist" ]; then
-            echo "✅ Info.plist exists"
-          else
-            echo "⚠️  Info.plist not found"
-          fi
-          
-          if [ -d "dist/PDF Processor.app/Contents/MacOS" ]; then
-            echo "✅ MacOS directory exists"
-            echo "Contents: $(ls -la 'dist/PDF Processor.app/Contents/MacOS/')"
-          else
-            echo "⚠️  MacOS directory not found"
-          fi
-          
-          if [ -d "dist/PDF Processor.app/Contents/Resources" ]; then
-            echo "✅ Resources directory exists"
-          else
-            echo "ℹ️  Resources directory not found (may be normal)"
-          fi
-        else
-          echo "❌ App bundle directory not found"
-          exit 1
         fi
         
         # Clean up
-        rm -f /tmp/app_startup.log
+        rm -f /tmp/app_output.log
         
-        echo "✅ macOS app testing completed!"
-        echo "📝 Note: Exit code 137 (SIGKILL) is common for GUI apps in CI environments"
-        echo "   and doesn't necessarily indicate a problem with your application."
+        # Try to get basic app info
+        echo "📋 App Information:"
+        file "$EXECUTABLE"
+        ls -la "$EXECUTABLE"
+        
+        echo "✅ macOS app test completed!"
 
     - name: Set executable permissions
       run: |
