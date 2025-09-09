@@ -40,6 +40,10 @@ jobs:
       run: |
         python validate_build.py
 
+    - name: Validate macOS compatibility configuration
+      run: |
+        python validate_macos_compatibility.py
+
     - name: Make build script executable
       run: |
         chmod +x build_macos.sh
