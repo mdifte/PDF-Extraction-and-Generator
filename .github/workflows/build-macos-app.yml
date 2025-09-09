@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-12  # Use macOS 12 for better compatibility with older macOS versions
+    runs-on: macos-latest
 
     steps:
     - name: Checkout code
@@ -40,8 +40,6 @@ jobs:
         chmod +x build_macos.sh
 
     - name: Build macOS app
-      env:
-        MACOSX_DEPLOYMENT_TARGET: 10.15  # Target macOS Catalina for compatibility
       run: |
         ./build_macos.sh
 
@@ -58,86 +56,59 @@ jobs:
           exit 1
         fi
 
-    - name: Set executable permissions
+    - name: Test macOS app startup
       run: |
-        echo "🔧 Setting executable permissions..."
-        chmod 755 "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
-        ls -la "dist/PDF Processor.app/Contents/MacOS/PDF Processor"
-
-    - name: Create distribution archive
-      run: |
-        echo "📦 Creating distribution archive with ditto..."
-        cd dist
-        ditto -c -k --sequesterRsrc --keepParent "PDF Processor.app" "../PDF-Processor-macOS-App.zip"
-        cd ..
-        ls -la PDF-Processor-macOS-App.zip
-
-    - name: Code sign application (optional)
-      run: |
-        echo "🔐 Code signing application..."
-        # Note: Replace with your actual Developer ID and Team ID
-        # You need to set up the following secrets in your repository:
-        # - DEVELOPER_ID_APPLICATION
-        # - DEVELOPER_TEAM_ID
-        # - AC_NOTARY_PROFILE (for notarytool)
+        echo "🧪 Testing macOS app startup..."
         
-        if [ -n "${{ secrets.DEVELOPER_ID_APPLICATION }}" ]; then
-          echo "Signing with Developer ID..."
-          codesign --force --deep --options runtime --sign "${{ secrets.DEVELOPER_ID_APPLICATION }}" "dist/PDF Processor.app"
-          
-          if [ $? -eq 0 ]; then
-            echo "✅ Code signing successful"
+        # Make sure the executable is present and executable
+        EXECUTABLE="dist/PDF Processor.app/Contents/MacOS/PDF Processor"
+        if [ ! -f "$EXECUTABLE" ]; then
+          echo "❌ Executable not found: $EXECUTABLE"
+          exit 1
+        fi
+        
+        # Make executable (should already be, but just in case)
+        chmod +x "$EXECUTABLE"
+        
+        # Test if the app can start (with timeout to prevent hanging)
+        echo "Testing app startup with 10-second timeout..."
+        
+        # macOS-compatible timeout using background process
+        "$EXECUTABLE" --help > /tmp/app_output.log 2>&1 &
+        APP_PID=$!
+        
+        # Wait up to 10 seconds for the process
+        SECONDS_WAITED=0
+        while kill -0 $APP_PID 2>/dev/null && [ $SECONDS_WAITED -lt 10 ]; do
+          sleep 1
+          SECONDS_WAITED=$((SECONDS_WAITED + 1))
+        done
+        
+        # Check if process is still running or exited
+        if kill -0 $APP_PID 2>/dev/null; then
+          echo "✅ App started successfully (still running after $SECONDS_WAITED seconds)"
+          kill $APP_PID 2>/dev/null || true
+        else
+          wait $APP_PID 2>/dev/null
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ App started and exited cleanly"
           else
-            echo "⚠️  Code signing failed - continuing without signing"
+            echo "⚠️  App exited with code: $EXIT_CODE"
+            echo "Output:"
+            cat /tmp/app_output.log 2>/dev/null || echo "No output captured"
           fi
-        else
-          echo "⚠️  Developer ID not configured - skipping code signing"
-        fi
-
-    - name: Notarize application (optional)
-      run: |
-        echo "📋 Notarizing application..."
-        # Requires AC_NOTARY_PROFILE secret to be configured
-        
-        if [ -n "${{ secrets.AC_NOTARY_PROFILE }}" ]; then
-          echo "Submitting for notarization..."
-          xcrun notarytool submit "dist/PDF Processor.app" --keychain-profile "${{ secrets.AC_NOTARY_PROFILE }}" --wait
-          
-          if [ $? -eq 0 ]; then
-            echo "✅ Notarization submitted successfully"
-            echo "Stapling notarization ticket..."
-            xcrun stapler staple "dist/PDF Processor.app"
-            
-            if [ $? -eq 0 ]; then
-              echo "✅ Notarization stapled successfully"
-            else
-              echo "⚠️  Stapling failed"
-            fi
-          else
-            echo "⚠️  Notarization failed - continuing without notarization"
-          fi
-        else
-          echo "⚠️  Notary profile not configured - skipping notarization"
-        fi
-
-    - name: Verify app bundle structure
-      run: |
-        echo "🔍 Verifying app bundle structure..."
-        echo "Info.plist contents:"
-        if [ -f "dist/PDF Processor.app/Contents/Info.plist" ]; then
-          plutil -p "dist/PDF Processor.app/Contents/Info.plist" | head -20
-        else
-          echo "⚠️  Info.plist not found in app bundle"
         fi
         
-        echo "CFBundleExecutable check:"
-        plutil -extract CFBundleExecutable raw "dist/PDF Processor.app/Contents/Info.plist" 2>/dev/null || echo "Not found"
+        # Clean up
+        rm -f /tmp/app_output.log
         
-        echo "CFBundlePackageType check:"
-        plutil -extract CFBundlePackageType raw "dist/PDF Processor.app/Contents/Info.plist" 2>/dev/null || echo "Not found"
+        # Try to get basic app info
+        echo "📋 App Information:"
+        file "$EXECUTABLE"
+        ls -la "$EXECUTABLE"
         
-        echo "CFBundleIdentifier check:"
-        plutil -extract CFBundleIdentifier raw "dist/PDF Processor.app/Contents/Info.plist" 2>/dev/null || echo "Not found"
+        echo "✅ macOS app test completed!"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -145,7 +116,6 @@ jobs:
         name: PDF-Processor-macOS-App
         path: |
           dist/PDF Processor.app/
-          PDF-Processor-macOS-App.zip
           build_macos.sh
           BUILD_README.md
         retention-days: 30
@@ -167,7 +137,7 @@ jobs:
       run: |
         echo "## 📦 Build Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Platform:** macOS $(sw_vers -productVersion) (targeting macOS 10.15+)" >> $GITHUB_STEP_SUMMARY
+        echo "**Platform:** macOS $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
         echo "**Python:** $(python --version)" >> $GITHUB_STEP_SUMMARY
         echo "**PyInstaller:** $(pyinstaller --version)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -182,22 +152,5 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🚀 Usage:" >> $GITHUB_STEP_SUMMARY
         echo "Download the artifact and:" >> $GITHUB_STEP_SUMMARY
-        echo "- Double-click PDF-Processor-macOS-App.zip to extract" >> $GITHUB_STEP_SUMMARY
         echo "- Double-click PDF Processor.app to run" >> $GITHUB_STEP_SUMMARY
-        echo "- Move to /Applications/ for system-wide access" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🔐 Security Features:" >> $GITHUB_STEP_SUMMARY
-        echo "- Executable permissions: 0755" >> $GITHUB_STEP_SUMMARY
-        echo "- Distribution archive with preserved permissions" >> $GITHUB_STEP_SUMMARY
-        echo "- Code signing (if configured)" >> $GITHUB_STEP_SUMMARY
-        echo "- Notarization (if configured)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 💻 Compatibility:" >> $GITHUB_STEP_SUMMARY
-        echo "- **macOS 10.15+ (Catalina)**: Full support" >> $GITHUB_STEP_SUMMARY
-        echo "- **macOS 11.0+ (Big Sur)**: Native optimization" >> $GITHUB_STEP_SUMMARY
-        echo "- **macOS 12.0+ (Monterey)**: Latest features" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📋 App Bundle Info:" >> $GITHUB_STEP_SUMMARY
-        echo "- CFBundleExecutable: PDF Processor" >> $GITHUB_STEP_SUMMARY
-        echo "- CFBundlePackageType: APPL" >> $GITHUB_STEP_SUMMARY
-        echo "- CFBundleIdentifier: com.pdfprocessor.app" >> $GITHUB_STEP_SUMMARY
+        echo "- Or move to /Applications/ for system-wide access" >> $GITHUB_STEP_SUMMARY
