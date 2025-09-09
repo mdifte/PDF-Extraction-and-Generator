@@ -38,9 +38,10 @@ This directory contains scripts to build standalone executables for the PDF Proc
 - **Requirements**: None (fully standalone)
 
 ### macOS:
-- **File**: `dist/PDF_Processor`
+- **File**: `dist/PDF Processor.app`
 - **Size**: ~50-70 MB  
-- **Requirements**: None (fully standalone)
+- **Requirements**: macOS 10.15 (Catalina) or newer
+- **Architecture**: Universal binary (Intel + Apple Silicon)
 
 ## 📁 Directory Structure After Build
 
@@ -110,7 +111,7 @@ pyinstaller --onefile --windowed --name "PDF_Processor" \
 
 - **Python**: 3.7+
 - **PyInstaller**: Latest
-- **Platform**: Windows 10+, macOS 10.14+
+- **Platform**: Windows 10+, macOS 10.15+ (Catalina)
 - **Architecture**: 64-bit recommended
 
 ## 🆘 Support
