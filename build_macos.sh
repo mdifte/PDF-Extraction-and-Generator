@@ -122,6 +122,10 @@ echo "Building PDF Processor app..."
 echo "This may take several minutes..."
 echo
 
+# Set macOS deployment target for Catalina compatibility
+export MACOSX_DEPLOYMENT_TARGET=10.15
+echo "Setting macOS deployment target to: $MACOSX_DEPLOYMENT_TARGET"
+
 python3 -m PyInstaller \
     --onedir \
     --windowed \

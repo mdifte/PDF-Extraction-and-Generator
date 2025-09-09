@@ -110,7 +110,7 @@ pyinstaller --onefile --windowed --name "PDF_Processor" \
 
 - **Python**: 3.7+
 - **PyInstaller**: Latest
-- **Platform**: Windows 10+, macOS 10.14+
+- **Platform**: Windows 10+, macOS 10.15+ (Catalina)
 - **Architecture**: 64-bit recommended
 
 ## 🆘 Support

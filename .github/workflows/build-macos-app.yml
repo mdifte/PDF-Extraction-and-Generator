@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-12  # Use macOS 12 for better compatibility with older macOS versions
 
     steps:
     - name: Checkout code
@@ -40,6 +40,8 @@ jobs:
         chmod +x build_macos.sh
 
     - name: Build macOS app
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15  # Target macOS Catalina for compatibility
       run: |
         ./build_macos.sh
 
@@ -165,7 +167,7 @@ jobs:
       run: |
         echo "## 📦 Build Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Platform:** macOS $(sw_vers -productVersion)" >> $GITHUB_STEP_SUMMARY
+        echo "**Platform:** macOS $(sw_vers -productVersion) (targeting macOS 10.15+)" >> $GITHUB_STEP_SUMMARY
         echo "**Python:** $(python --version)" >> $GITHUB_STEP_SUMMARY
         echo "**PyInstaller:** $(pyinstaller --version)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -189,6 +191,11 @@ jobs:
         echo "- Distribution archive with preserved permissions" >> $GITHUB_STEP_SUMMARY
         echo "- Code signing (if configured)" >> $GITHUB_STEP_SUMMARY
         echo "- Notarization (if configured)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 💻 Compatibility:" >> $GITHUB_STEP_SUMMARY
+        echo "- **macOS 10.15+ (Catalina)**: Full support" >> $GITHUB_STEP_SUMMARY
+        echo "- **macOS 11.0+ (Big Sur)**: Native optimization" >> $GITHUB_STEP_SUMMARY
+        echo "- **macOS 12.0+ (Monterey)**: Latest features" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📋 App Bundle Info:" >> $GITHUB_STEP_SUMMARY
         echo "- CFBundleExecutable: PDF Processor" >> $GITHUB_STEP_SUMMARY

@@ -63,7 +63,7 @@ jobs:
         retention-days: 30
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-12  # Use macOS 12 for better compatibility with older macOS versions
 
     steps:
     - name: Checkout code
@@ -94,6 +94,8 @@ jobs:
         chmod +x build_macos.sh
 
     - name: Build macOS app
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15  # Target macOS Catalina for compatibility
       run: |
         ./build_macos.sh
 
@@ -175,18 +177,18 @@ jobs:
 
           ### 📦 Downloads:
           - **Windows**: `PDF_Processor_Windows.zip` - Standalone .exe file
-          - **macOS**: `PDF_Processor_macOS.tar.gz` - Native macOS .app bundle
+          - **macOS**: `PDF_Processor_macOS.tar.gz` - Native macOS .app bundle (macOS 10.15+ Catalina)
           - **All Platforms**: `PDF_Processor_All_Platforms.zip` - Combined archive
 
           ### ✨ Features:
           - Batch PDF processing with modern GUI
           - Automatic text replacement with formatting preservation
           - JSON-based dynamic PDF generation
-          - Cross-platform compatibility
+          - Cross-platform compatibility (Windows 10+, macOS 10.15+ Catalina)
 
           ### 🛠️ Installation:
           - **Windows**: Extract and run `PDF_Processor.exe`
-          - **macOS**: Extract and double-click `PDF Processor.app`
+          - **macOS**: Extract and double-click `PDF Processor.app` (requires macOS 10.15+ Catalina)
 
           No Python installation required!
         draft: false
