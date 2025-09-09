@@ -25,6 +25,11 @@ jobs:
         brew update
         brew install python-tk
 
+    - name: Set macOS deployment target for compatibility
+      run: |
+        echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
+        echo "🎯 Setting macOS deployment target to 10.15 (Catalina) for broader compatibility"
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
@@ -34,6 +39,10 @@ jobs:
     - name: Validate build requirements
       run: |
         python validate_build.py
+
+    - name: Validate macOS compatibility configuration
+      run: |
+        python validate_macos_compatibility.py
 
     - name: Make build script executable
       run: |

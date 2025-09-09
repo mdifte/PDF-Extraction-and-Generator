@@ -57,6 +57,11 @@ Run the following command in the terminal:
 - This is a complete macOS app that users can double-click to run
 - Includes all fonts, images, and documents bundled inside
 
+**Compatibility:**
+- **Minimum macOS version**: 10.15 (Catalina)
+- **Architecture**: Universal binary (works on Intel and Apple Silicon Macs)
+- **Optimized for**: Broad compatibility across different Mac devices
+
 **Explanation of Flags:**
 - `--onedir` : Creates a directory bundle (macOS .app format) instead of a single file
 - `--windowed` : Hides the terminal window when running the app

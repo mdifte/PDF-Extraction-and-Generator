@@ -1,23 +1,14 @@
 #!/bin/bash
 
 echo "========================================"
-echo "PDF P# Fix pathlib compatibility issue with PyInstaller
-echo "Checking for pathlib compatibility issues..."
-if pip3 show pathlib &> /dev/null; then
-    echo "Found incompatible pathlib package. Removing it..."
-    pip3 uninstall pathlib -y
-    if [ $? -ne 0 ]; then
-        echo "WARNING: Could not uninstall pathlib automatically"
-        echo "Please run: pip3 uninstall pathlib"
-        echo "Then re-run this build script"
-        exit 1
-    fi
-    print_status "pathlib compatibility issue resolved"
-else
-    print_status "No pathlib compatibility issues found"
-fiS App Builder"
+echo "PDF Processor macOS App Builder"
 echo "========================================"
 echo
+
+# Set macOS deployment target for broader compatibility
+# This ensures the app will run on macOS Catalina (10.15) and newer
+export MACOSX_DEPLOYMENT_TARGET=10.15
+echo "🎯 Setting deployment target to macOS ${MACOSX_DEPLOYMENT_TARGET} (Catalina) for broader compatibility"
 
 # Colors for output
 RED='\033[0;31m'
@@ -121,6 +112,11 @@ print_status "Cleaned previous builds"
 echo "Building PDF Processor app..."
 echo "This may take several minutes..."
 echo
+echo "🔧 Build configuration:"
+echo "   Deployment target: ${MACOSX_DEPLOYMENT_TARGET}"
+echo "   Python version: $(python3 --version)"
+echo "   PyInstaller version: $(python3 -m PyInstaller --version)"
+echo
 
 # Set macOS deployment target for Catalina compatibility
 export MACOSX_DEPLOYMENT_TARGET=10.15
@@ -157,7 +153,7 @@ python3 -m PyInstaller \
     --collect-all "docx" \
     --collect-all "lxml" \
     --osx-bundle-identifier "com.pdfprocessor.app" \
-    --osx-entitlements-file "Info.plist" \
+    --target-architecture universal2 \
     pdf_processor.py
 
 if [ $? -ne 0 ]; then
@@ -175,6 +171,15 @@ echo
 echo "Your macOS app bundle is ready:"
 echo "Location: dist/PDF Processor.app"
 echo
+
+# Update Info.plist with proper compatibility settings
+echo "🔧 Updating Info.plist for macOS compatibility..."
+if [ -f "App-Info.plist" ] && [ -d "dist/PDF Processor.app/Contents" ]; then
+    cp "App-Info.plist" "dist/PDF Processor.app/Contents/Info.plist"
+    print_status "Info.plist updated with Catalina compatibility"
+else
+    print_warning "App-Info.plist not found or app bundle incomplete"
+fi
 
 # Set proper permissions for the executable
 echo "Setting executable permissions..."
@@ -201,6 +206,11 @@ echo "1. Run the app by double-clicking: dist/PDF Processor.app"
 echo "2. Copy the app to /Applications/ for system-wide access"
 echo "3. Create an alias on your desktop"
 echo "4. Distribute the zip file: PDF-Processor-macOS-App.zip"
+echo
+echo "📋 Compatibility Information:"
+echo "   Minimum macOS version: 10.15 (Catalina)"
+echo "   Architecture: Universal binary (Intel + Apple Silicon)"
+echo "   Works on: Intel Macs and Apple Silicon Macs"
 echo
 echo "To install system-wide (optional):"
 echo "  cp -r 'dist/PDF Processor.app' /Applications/"
